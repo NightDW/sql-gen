@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>database</title>
+</head>
+<body>
+
+<div>
+    <p>SQL语句：<button type="button" onclick="copy(this)">复制</button></p>
+    <pre th:text="${sql}"></pre>
+</div>
+
+<hr />
+
+<div>
+    <p>RO实体类：<button type="button" onclick="copy(this)">复制</button></p>
+    <pre th:text="${rovo[0]}"></pre>
+</div>
+
+<hr />
+
+<div>
+    <p>VO实体类：<button type="button" onclick="copy(this)">复制</button></p>
+    <pre th:text="${rovo[1]}"></pre>
+</div>
+
+<script>
+    function copy(button) {
+        var pre = button.parentNode.parentNode.getElementsByTagName('pre')[0];
+
+        // 根据具体情况采用不同的方式
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(pre.innerText).then(function() {
+                onCopySuccess(button);
+            });
+        } else {
+
+            // 创建一个临时元素来存放待复制的文本
+            var textarea = document.createElement('textarea');
+            textarea.setAttribute('display', 'none');
+            textarea.value = pre.innerText;
+
+            // 将该元素添加到文档中，并选中该元素，然后执行复制操作
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+
+            // 删除临时元素
+            document.body.removeChild(textarea);
+
+            onCopySuccess(button);
+        }
+    }
+
+    function onCopySuccess(button) {
+        button.innerText = '成功';
+        setTimeout(function() {
+            button.innerText = '复制';
+        }, 1000);
+    }
+</script>
+
+</body>
+</html>

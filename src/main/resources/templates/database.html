@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>database</title>
+    <link rel="stylesheet" th:href="@{/database.css}">
+</head>
+<body>
+
+<form th:action="@{/change}" method="post">
+    <p>
+        <span>JdbcUrl: </span>
+        <input type="text" name="url" th:value="${properties.url}" />
+    </p>
+
+    <p>
+        <span>User: </span>
+        <input type="text" name="user" th:value="${properties.user}" />
+    </p>
+
+    <p>
+        <span>Password: </span>
+        <input type="text" name="password" th:value="${properties.password}" />
+    </p>
+
+    <p>
+        <button type="submit">提交</button>
+    </p>
+</form>
+
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>sql gen</title>
+    <link rel="stylesheet" th:href="@{/index.css}">
+</head>
+<body>
+
+<div id="header">
+    <p>
+        <span style="color: red" th:text="${'当前数据库：' + db.name}"></span>
+        <a th:href="@{/database}">更改</a>
+    </p>
+</div>
+
+<form id="form" th:action="@{/submit}" method="post">
+
+    <div id="from" class="box">
+        <p>
+            FROM:
+            <select name="from.tableName" onchange="submit()">
+                <option selected="selected" disabled="disabled">NONE</option>
+                <option th:each="table:${data.from.selectedTable}" th:text="${table.name}" th:value="${table.name}" th:selected="${table.selected}"></option>
+            </select>
+            <input class="alias" onkeyup="submitIfEnter(event)" onblur="submit()" type="text" name="from.tableAlias" th:value="${data.from.tableAlias}">
+        </p>
+    </div>
+
+    <div id="joins" class="box">
+
+        <!-- joins组件模板，方便添加join组件 -->
+        <p id="joinTemplate" hidden="hidden">
+            <select>
+                <option th:each="joinType:${T(com.laidw.sql.gen.constant.JoinType).values()}" th:value="${joinType.name()}" th:text="${joinType.name()}"></option>
+            </select>
+            :
+            <select onchange="submit()">
+                <option value="NONE">NONE</option>
+                <option th:each="table:${db.tables}" th:value="${table.name}" th:text="${table.name}"></option>
+            </select>
+            <a href="javascript:void" onclick="deleteJoin(this)">DELETE</a>
+        </p>
+
+        <!-- 已有的join组件 -->
+        <p class="join" th:each="join,status:${data.joins}">
+            <select th:name="${'joins[' + status.index + '].type'}">
+                <option th:each="joinType:${join.selectedType}" th:value="${joinType.name}" th:text="${joinType.name}" th:selected="${joinType.selected}"></option>
+            </select>
+            :
+            <select onchange="submit()" th:name="${'joins[' + status.index + '].tableName'}">
+                <option value="NONE">NONE</option>
+                <option th:each="table:${join.selectedTable}" th:text="${table.name}" th:value="${table.name}" th:selected="${table.selected}"></option>
+            </select>
+            <input class="alias" onkeyup="submitIfEnter(event)" onblur="submit()" type="text" th:name="${'joins[' + status.index + '].tableAlias'}" th:value="${join.tableAlias}">
+            ON
+            <select th:name="${'joins[' + status.index + '].column1'}">
+                <option th:each="can1:${join.joinColumns1}" th:value="${can1.name}" th:text="${can1.name}" th:selected="${can1.selected}"></option>
+            </select>
+            =
+            <select th:name="${'joins[' + status.index + '].column2'}">
+                <option th:each="can2:${join.joinColumns2}" th:value="${can2.name}" th:text="${can2.name}" th:selected="${can2.selected}"></option>
+            </select>
+            <a href="javascript:void" onclick="deleteJoin(this)">DELETE</a>
+        </p>
+
+        <!-- 添加join组件的按钮 -->
+        <p><a href="javascript:void" onclick="addJoin(this)">ADD JOIN</a></p>
+    </div>
+
+    <div id="wheres" class="box">
+        <p>WHERE:</p>
+        <p th:each="group:${data.wheres}">
+            <button type="button" th:text="${group.name}" onclick="checkAll(this)"></button>
+            <input name="wheres" type="checkbox" th:each="item:${group}" th:value="${item.fullName}" th:text="${item.name}" th:checked="${item.checked}">
+        </p>
+    </div>
+
+    <details id="groupBys" class="box" th:open="${!data.checkedGroupBys.isEmpty()}">
+        <summary>GROUP BY:</summary>
+        <p th:each="group:${data.groupBys}">
+            <button type="button" th:text="${group.name}" onclick="checkAll(this)"></button>
+            <!-- SELECT列和ORDER BY列会受GROUP BY列的影响，因此每次更改GROUP BY列，都需要提交，重新渲染页面 -->
+            <input onchange="submit()" name="groupBys" type="checkbox" th:each="item:${group}" th:value="${item.fullName}" th:text="${item.name}" th:checked="${item.checked}">
+        </p>
+
+        <p>
+            HAVING:
+            <input type="text" name="having" th:value="${data.having}" />
+        </p>
+    </details>
+
+    <div id="selects" class="box">
+        <p>SELECT:</p>
+        <p th:each="group:${data.selects}">
+            <button type="button" th:text="${group.name}" onclick="checkAll(this)"></button>
+            <!-- 当指定了GROUP BY列时，只有GROUP BY列可以作为SELECT列 -->
+            <input th:disabled="${!data.checkedGroupBys.isEmpty() and !data.checkedGroupBys.contains(item.fullName)}"
+                   name="selects" type="checkbox" th:each="item:${group}" th:value="${item.fullName}" th:text="${item.name}" th:checked="${item.checked}">
+        </p>
+        <p>
+            AGGREGATE:
+            <input type="text" name="aggregateSelect" th:value="${data.aggregateSelect}">
+        </p>
+    </div>
+
+    <div id="orderBys" class="box">
+        <p>ORDER BY:</p>
+        <p th:each="group:${data.orderBys}">
+            <button type="button" th:text="${group.name}" onclick="checkAll(this)"></button>
+            <!-- 当指定了GROUP BY列时，只有GROUP BY列可以作为ORDER BY列 -->
+            <input th:disabled="${!data.checkedGroupBys.isEmpty() and !data.checkedGroupBys.contains(item.fullName)}"
+                   name="orderBys" type="checkbox" th:each="item:${group}" th:value="${item.fullName}" th:text="${item.name}" th:checked="${item.checked}">
+        </p>
+    </div>
+
+    <button type="button" onclick="generate()">生成结果</button>
+</form>
+
+<script type="text/javascript" th:src="@{/index.js}"></script>
+</body>
+</html>
