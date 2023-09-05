@@ -67,10 +67,11 @@ sys_user表和sys_parent_child_rel表的具体内容如下：
 
 ### 2.4. 聚合查询
 
-> 查询所有班级各自的学生人数
+> 查询出每个班级中，学生id的平均值、学生名字的最大值和学生人数
 
 1. 此时需要连接sys_user、sys_user_class_rel、sys_class表
 2. 并且，需要将sys_class表的class_id列作为GROUP BY列
-3. sql-gen暂不支持通过点击的方式来指定聚合查询的列，需要用户手动在输入框中指定
+3. 然后对sys_user表的user_id列进行AVG查询、user_name列进行MAX查询、gender列进行COUNT查询即可
+4. CN、MA、MI、AV、SU分别代表COUNT、MAX、MIN、AVG、SUM
 
 ![](./img/groupby.gif)
