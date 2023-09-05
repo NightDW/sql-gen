@@ -1,6 +1,5 @@
 package com.laidw.sql.gen.vo;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Iterator;
@@ -26,23 +25,32 @@ public class CheckBoxGroupVO implements Iterable<CheckBoxGroupVO.CheckItemVO> {
     private final String name;
 
     /**
-     * 该组内的所有选项，即该表中的所有列名，以及这些列名是否被勾选了
+     * 该组内的所有选项，即该表中的所有列名，以及这些列名是否被启用或勾选了
      */
     private final List<CheckItemVO> items;
 
     /**
-     * 用户真正勾选的选项，格式为alias.column_name
+     * 真正启用的列；元素格式为alias.column_name；为空时，所有列都启用
+     * <p>假如GROUP BY usr.user_id，那么在SELECT时，usr.user_id之外的其它列都应该被禁用
      */
+    private final Set<String> enables;
+
+    /**
+     * 用户真正勾选的选项，元素格式为alias.column_name
+     */
+    @Getter
     private final Set<String> checked;
 
     /**
      * @param name    表的别名
      * @param items   该表的所有列名
+     * @param enables 所有GROUP BY列；当创建GROUP BY组件时，传空集合即可
      * @param checked 用户实际选中的列，格式为alias.column_name
      */
-    public CheckBoxGroupVO(String name, List<String> items, Set<String> checked) {
+    public CheckBoxGroupVO(String name, List<String> items, Set<String> enables, Set<String> checked) {
         this.name = name;
         this.items = items.stream().map(CheckItemVO::new).collect(Collectors.toList());
+        this.enables = enables;
         this.checked = checked;
     }
 
@@ -54,28 +62,38 @@ public class CheckBoxGroupVO implements Iterable<CheckBoxGroupVO.CheckItemVO> {
     /**
      * 多选框中的某个选项
      */
-    @AllArgsConstructor
+    @Getter
     public class CheckItemVO {
 
         /**
          * 选该项的展示名称
          */
-        @Getter
-        private String name;
+        private final String name;
+
+        /**
+         * 该选项的完整名称，格式为alias.column_name
+         */
+        private final String fullName;
+
+        public CheckItemVO(String name) {
+            this.name = name;
+            this.fullName = CheckBoxGroupVO.this.name + "." + name;
+        }
+
+        /**
+         * 该选项是否被启用，该方法是提供给Thymeleaf调用的
+         */
+        @SuppressWarnings("unused")
+        public boolean getEnabled() {
+            return enables.isEmpty() || enables.contains(fullName);
+        }
 
         /**
          * 该选项是否被勾选，该方法是提供给Thymeleaf调用的
          */
         @SuppressWarnings("unused")
         public boolean getChecked() {
-            return checked.contains(getFullName());
-        }
-
-        /**
-         * 该选项的完整名称
-         */
-        public String getFullName() {
-            return CheckBoxGroupVO.this.name + "." + name;
+            return getEnabled() && checked.contains(fullName);
         }
     }
 }

@@ -6,8 +6,6 @@ import com.laidw.sql.gen.vo.FromVO;
 import com.laidw.sql.gen.vo.SelectBoxVO;
 import com.laidw.sql.gen.vo.SqlGenVO;
 
-import java.util.Collections;
-
 /**
  * 渲染视图、生成SQL的核心组件
  *
@@ -46,7 +44,6 @@ public interface SqlGenService {
     default SqlGenVO render(Database database) {
         SqlGenVO vo = new SqlGenVO();
         vo.setFrom(new FromVO(new SelectBoxVO(database.getTableNames(), null), null));
-        vo.setCheckedGroupBys(Collections.emptySet());
         return vo;
     }
 }

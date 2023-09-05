@@ -76,11 +76,11 @@
         </p>
     </div>
 
-    <details id="groupBys" class="box" th:open="${!data.checkedGroupBys.isEmpty()}">
+    <details id="groupBys" class="box" th:open="${data.groupBys != null and !data.groupBys.isEmpty() and !data.groupBys.get(0).checked.isEmpty()}">
         <summary>GROUP BY:</summary>
         <p th:each="group:${data.groupBys}">
-            <button type="button" th:text="${group.name}" onclick="checkAll(this)"></button>
-            <!-- SELECT列和ORDER BY列会受GROUP BY列的影响，因此每次更改GROUP BY列，都需要提交，重新渲染页面 -->
+            <button type="button" th:text="${group.name}" onclick="checkAll(this);submit();"></button>
+            <!-- SELECT列和ORDER BY列会受GROUP BY列的影响，因此每次更改GROUP BY列，都需要提交，重新渲染页面；全选按钮也同理 -->
             <input onchange="submit()" name="groupBys" type="checkbox" th:each="item:${group}" th:value="${item.fullName}" th:text="${item.name}" th:checked="${item.checked}">
         </p>
 
@@ -94,9 +94,9 @@
         <p>SELECT:</p>
         <p th:each="group:${data.selects}">
             <button type="button" th:text="${group.name}" onclick="checkAll(this)"></button>
-            <!-- 当指定了GROUP BY列时，只有GROUP BY列可以作为SELECT列 -->
-            <input th:disabled="${!data.checkedGroupBys.isEmpty() and !data.checkedGroupBys.contains(item.fullName)}"
-                   name="selects" type="checkbox" th:each="item:${group}" th:value="${item.fullName}" th:text="${item.name}" th:checked="${item.checked}">
+            <!-- 注意，当指定了GROUP BY列时，只有GROUP BY列可以作为SELECT列，其它列需要禁用 -->
+            <input name="selects" type="checkbox" th:each="item:${group}" th:value="${item.fullName}" th:text="${item.name}"
+                   th:disabled="${!item.enabled}" th:checked="${item.checked}">
         </p>
         <p>
             AGGREGATE:
@@ -108,9 +108,9 @@
         <p>ORDER BY:</p>
         <p th:each="group:${data.orderBys}">
             <button type="button" th:text="${group.name}" onclick="checkAll(this)"></button>
-            <!-- 当指定了GROUP BY列时，只有GROUP BY列可以作为ORDER BY列 -->
-            <input th:disabled="${!data.checkedGroupBys.isEmpty() and !data.checkedGroupBys.contains(item.fullName)}"
-                   name="orderBys" type="checkbox" th:each="item:${group}" th:value="${item.fullName}" th:text="${item.name}" th:checked="${item.checked}">
+            <!-- 注意，当指定了GROUP BY列时，只有GROUP BY列可以作为ORDER BY列，其它列需要禁用 -->
+            <input name="orderBys" type="checkbox" th:each="item:${group}" th:value="${item.fullName}" th:text="${item.name}"
+                   th:disabled="${!item.enabled}" th:checked="${item.checked}">
         </p>
     </div>
 

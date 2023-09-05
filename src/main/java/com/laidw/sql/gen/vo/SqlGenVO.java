@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * 交给HTML模板渲染的页面信息
@@ -34,11 +33,6 @@ public class SqlGenVO {
      * GROUP BY信息；这里会展示涉及到的所有表及其所有的列，以及这些列是否被选中
      */
     private List<CheckBoxGroupVO> groupBys;
-
-    /**
-     * GROUP BY列；用于决定是否展开GROUP BY的details标签，以及是否disable掉某些SELECT列等
-     */
-    private Set<String> checkedGroupBys;
 
     /**
      * HAVING条件

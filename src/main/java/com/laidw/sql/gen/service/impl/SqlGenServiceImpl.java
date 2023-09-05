@@ -285,31 +285,30 @@ public class SqlGenServiceImpl implements SqlGenService {
 
             // 设置GROUP BY
             Set<String> groupBys = asSet(ro.getGroupBys());
-            vo.setCheckedGroupBys(groupBys);
-            vo.setGroupBys(getCheckBoxGroups(vo, database, groupBys));
+            vo.setGroupBys(getCheckBoxGroups(vo, database, Collections.emptySet(), groupBys));
 
             // 设置SELECT；GROUP BY列默认当作SELECT列
             Set<String> selects = new HashSet<>(groupBys);
             if (ro.getSelects() != null) {
                 selects.addAll(ro.getSelects());
             }
-            vo.setSelects(getCheckBoxGroups(vo, database, selects));
+            vo.setSelects(getCheckBoxGroups(vo, database, groupBys, selects));
 
-            vo.setWheres(getCheckBoxGroups(vo, database, asSet(ro.getWheres())));
-            vo.setOrderBys(getCheckBoxGroups(vo, database, asSet(ro.getOrderBys())));
+            vo.setWheres(getCheckBoxGroups(vo, database, groupBys, asSet(ro.getWheres())));
+            vo.setOrderBys(getCheckBoxGroups(vo, database, groupBys, asSet(ro.getOrderBys())));
         }
 
-        private List<CheckBoxGroupVO> getCheckBoxGroups(SqlGenVO vo, Database database, Set<String> wheres) {
+        private List<CheckBoxGroupVO> getCheckBoxGroups(SqlGenVO vo, Database database, Set<String> enabled, Set<String> checked) {
             List<CheckBoxGroupVO> checkBoxGroups = new ArrayList<>();
-            checkBoxGroups.add(getTableColumnsCheckBox(vo.getFrom().getSelectedTable().getSelected(), vo.getFrom().getTableAlias(), database, wheres));
+            checkBoxGroups.add(getTableColumnsCheckBox(vo.getFrom().getSelectedTable().getSelected(), vo.getFrom().getTableAlias(), database, enabled, checked));
             for (JoinVO join : vo.getJoins()) {
-                checkBoxGroups.add(getTableColumnsCheckBox(join.getSelectedTable().getSelected(), join.getTableAlias(), database, wheres));
+                checkBoxGroups.add(getTableColumnsCheckBox(join.getSelectedTable().getSelected(), join.getTableAlias(), database, enabled, checked));
             }
             return checkBoxGroups;
         }
 
-        private CheckBoxGroupVO getTableColumnsCheckBox(String tableName, String alias, Database database, Set<String> wheres) {
-            return new CheckBoxGroupVO(alias, database.getTable(tableName).getColumnNames(), wheres);
+        private CheckBoxGroupVO getTableColumnsCheckBox(String tableName, String alias, Database database, Set<String> enabled, Set<String> checked) {
+            return new CheckBoxGroupVO(alias, database.getTable(tableName).getColumnNames(), enabled, checked);
         }
 
         private Set<String> asSet(List<String> list) {
