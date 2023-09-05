@@ -50,12 +50,6 @@ public class SqlGenAutoConfiguration {
         return new SimpleTypeConverter();
     }
 
-    @Bean
-    @ConditionalOnMissingBean
-    public AggregateColumnAliasGenerator aggregateColumnAliasSetter(ColumnAliasGenerator columnAliasGenerator) {
-        return new SimpleAggregateColumnAliasGenerator(columnAliasGenerator);
-    }
-
     /**
      * DatabaseLoader组件可以有多个，这里默认只注册MySqlDatabaseLoader组件
      */

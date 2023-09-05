@@ -43,9 +43,6 @@ public class SqlGenServiceImpl implements SqlGenService {
     @Autowired
     private TypeConverter typeConverter;
 
-    @Autowired
-    private AggregateColumnAliasGenerator aggregateColumnAliasGenerator;
-
     /**
      * 本类底层通过Render组件来渲染视图
      */
@@ -133,7 +130,7 @@ public class SqlGenServiceImpl implements SqlGenService {
         }
 
         // 处理聚合列
-        forEach(aggregates, aggregateColumnAliasGenerator.generate(aggregates), (aggregate, alias) -> {
+        forEach(aggregates, columnAliasGenerator.generateForAggregate(aggregates), (aggregate, alias) -> {
             String propertyName = StringUtil.toCamelCase(alias);
 
             // 推断该聚合查询列的Java类型
@@ -365,7 +362,7 @@ public class SqlGenServiceImpl implements SqlGenService {
             // 处理聚合列
             if (!aggregates.isEmpty()) {
                 sb.append("  ");
-                forEach(aggregates, aggregateColumnAliasGenerator.generate(aggregates), (aggregate, alias) -> {
+                forEach(aggregates, columnAliasGenerator.generateForAggregate(aggregates), (aggregate, alias) -> {
                     sb.append(aggregate.toString()).append(' ').append(alias).append(", ");
                 });
                 sb.delete(sb.length() - 2, sb.length());
