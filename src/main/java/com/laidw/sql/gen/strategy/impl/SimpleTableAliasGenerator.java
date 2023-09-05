@@ -30,7 +30,7 @@ public class SimpleTableAliasGenerator implements TableAliasGenerator {
     private boolean compactComposite = true;
 
     @Override
-    public String generateAlias(String table, Collection<String> existedAliases) {
+    public String generate(String table, Collection<String> existedAliases) {
         String shortTableName = getShortTableName(table);
 
         if (!existedAliases.contains(shortTableName)) {

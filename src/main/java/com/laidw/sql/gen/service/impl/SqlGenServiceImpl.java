@@ -227,7 +227,7 @@ public class SqlGenServiceImpl implements SqlGenService {
             }
 
             // 生成并设置别名
-            aliases = tableAliasGenerator.generateAliases(tables, aliases);
+            aliases = tableAliasGenerator.generate(tables, aliases);
             vo.getFrom().setTableAlias(aliases.get(0));
             for (int i = 1; i < aliases.size(); i++) {
                 vo.getJoins().get(i - 1).setTableAlias(aliases.get(i));

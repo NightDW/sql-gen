@@ -18,7 +18,7 @@ public interface TableAliasGenerator {
      * @param table          该表的名称
      * @param existedAliases 已存在的别名
      */
-    String generateAlias(String table, Collection<String> existedAliases);
+    String generate(String table, Collection<String> existedAliases);
 
     /**
      * 批量生成别名
@@ -26,7 +26,7 @@ public interface TableAliasGenerator {
      * @param tables        待生成别名的表名
      * @param customAliases 已存在的别名；customAliases.get(i)是tables.get(i)的别名
      */
-    default List<String> generateAliases(List<String> tables, List<String> customAliases) {
+    default List<String> generate(List<String> tables, List<String> customAliases) {
         if (tables.size() != customAliases.size()) {
             throw new SqlGenException("表名称数量与别名数量不一致");
         }
@@ -48,7 +48,7 @@ public interface TableAliasGenerator {
         String[] aliases = customAliases.toArray(new String[0]);
         for (int i = 0; i < tables.size(); i++) {
             if (StringUtil.isEmpty(aliases[i])) {
-                String alias = generateAlias(tables.get(i), existedAliases);
+                String alias = generate(tables.get(i), existedAliases);
                 aliases[i] = alias;
                 existedAliases.add(alias);
             }
