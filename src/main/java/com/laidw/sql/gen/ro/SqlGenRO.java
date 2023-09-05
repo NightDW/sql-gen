@@ -50,9 +50,9 @@ public class SqlGenRO {
     private List<String> selects;
 
     /**
-     * 允许用户自己指定聚合查询
+     * 聚合查询列，格式为AGGREGATE(alias.column_name)；这里可能会包含空选项
      */
-    private String aggregateSelect;
+    private List<String> aggregateSelects;
 
     /**
      * 需要进行排序的列，格式为alias.column_name

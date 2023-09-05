@@ -9,7 +9,7 @@
 
 <div id="header">
     <p>
-        <span style="color: red" th:text="${'当前数据库：' + db.name}"></span>
+        <span th:text="${'当前数据库：' + db.name}"></span>
         <a th:href="@{/database}">更改</a>
     </p>
 </div>
@@ -94,13 +94,25 @@
         <p>SELECT:</p>
         <p th:each="group:${data.selects}">
             <button type="button" th:text="${group.name}" onclick="checkAll(this)"></button>
-            <!-- 注意，当指定了GROUP BY列时，只有GROUP BY列可以作为SELECT列，其它列需要禁用 -->
-            <input name="selects" type="checkbox" th:each="item:${group}" th:value="${item.fullName}" th:text="${item.name}"
-                   th:disabled="${!item.enabled}" th:checked="${item.checked}">
-        </p>
-        <p>
-            AGGREGATE:
-            <input type="text" name="aggregateSelect" th:value="${data.aggregateSelect}">
+
+            <!-- 注意，当指定了GROUP BY列时，只有GROUP BY列可以作为SELECT列，其它列则需要用聚合查询 -->
+            <span th:each="item:${group}">
+
+                <!-- 如果是GROUP BY列，则显示为勾选框 -->
+                <input name="selects" type="checkbox" th:value="${item.fullName}" th:text="${item.name}"
+                       th:if="${item.enabled}" th:checked="${item.checked}">
+
+                <!-- 如果不是GROUP BY列，则显示为下拉框，让用户选择聚合类型 -->
+                <label th:if="${!item.enabled}" >
+                    <select class="aggregateSelect" name="aggregateSelects">
+                        <option></option>
+                        <option th:each="aggType:${T(com.laidw.sql.gen.constant.AggregateType).values()}"
+                                th:text="${aggType.val}" th:value="${aggType.name() + '(' + item.fullName + ')'}"
+                                th:selected="${data.aggregateSelects.contains(aggType.name() + '(' + item.fullName + ')')}"></option>
+                    </select>
+                    <span th:text="${item.name}"></span>
+                </label>
+            </span>
         </p>
     </div>
 

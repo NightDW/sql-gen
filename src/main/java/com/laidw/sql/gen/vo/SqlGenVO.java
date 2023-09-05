@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * 交给HTML模板渲染的页面信息
@@ -45,9 +46,9 @@ public class SqlGenVO {
     private List<CheckBoxGroupVO> selects;
 
     /**
-     * 用户自己指定的聚合查询列
+     * 聚合查询列，格式为AGGREGATE(alias.column_name)
      */
-    private String aggregateSelect;
+    private Set<String> aggregateSelects;
 
     /**
      * ORDER BY条件；这里会展示涉及到的所有表及其所有的列，以及这些列是否被选中

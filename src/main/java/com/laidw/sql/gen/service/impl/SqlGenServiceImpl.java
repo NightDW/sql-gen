@@ -1,7 +1,6 @@
 package com.laidw.sql.gen.service.impl;
 
 import com.laidw.sql.gen.component.ClassInfo;
-import com.laidw.sql.gen.constant.AggregateType;
 import com.laidw.sql.gen.constant.JoinType;
 import com.laidw.sql.gen.entity.AggregateColumn;
 import com.laidw.sql.gen.entity.Column;
@@ -19,7 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.function.BiConsumer;
 
 /**
  * Description of class {@link SqlGenServiceImpl}.
@@ -45,7 +44,7 @@ public class SqlGenServiceImpl implements SqlGenService {
     private TypeConverter typeConverter;
 
     @Autowired
-    private AggregateColumnAliasSetter aggregateColumnAliasSetter;
+    private AggregateColumnAliasGenerator aggregateColumnAliasGenerator;
 
     /**
      * 本类底层通过Render组件来渲染视图
@@ -94,7 +93,7 @@ public class SqlGenServiceImpl implements SqlGenService {
             }
         }
 
-        List<AggregateColumn> aggregates = AggregateUtil.parse(sqlGenRO.getAggregateSelect());
+        List<AggregateColumn> aggregates = AggregateUtil.parse(sqlGenRO.getAggregateSelects());
         String ro = getClassStr("RO", sqlGenRO.getWheres(), Collections.emptyList(), database, alias2table);
         String vo = getClassStr("VO", sqlGenRO.getSelects(), aggregates, database, alias2table);
         return new String[] {ro, vo};
@@ -134,21 +133,32 @@ public class SqlGenServiceImpl implements SqlGenService {
         }
 
         // 处理聚合列
-        for (AggregateColumn aggregate : aggregates) {
-            aggregateColumnAliasSetter.set(aggregate);
-            String propertyName = StringUtil.toCamelCase(aggregate.getAlias());
+        forEach(aggregates, aggregateColumnAliasGenerator.generate(aggregates), (aggregate, alias) -> {
+            String propertyName = StringUtil.toCamelCase(alias);
 
-            // 如果是COUNT查询，则Java类型为Long，否则以原始列的类型为准
-            if (aggregate.getType() == AggregateType.COUNT) {
-                classInfo.addSimpleField(Long.class, propertyName);
-            } else {
+            // 推断该聚合查询列的Java类型
+            Class<?> javaType = aggregate.getType().javaType;
+            if (javaType == Object.class) {
                 String tableName = alias2table.get(aggregate.getTableAlias());
                 int dataType = database.getTable(tableName).getColumnDataType(aggregate.getColumnName());
-                classInfo.addSimpleField(typeConverter.toJavaType(dataType), propertyName);
+                javaType = typeConverter.toJavaType(dataType);
             }
-        }
+
+            classInfo.addSimpleField(javaType, propertyName);
+        });
 
         return classInfo.toString();
+    }
+
+    private Set<String> asSet(Collection<String> list) {
+        return CollectionUtils.isEmpty(list) ? Collections.emptySet() : new HashSet<>(list);
+    }
+
+    private static <T1, T2> void forEach(List<T1> list1, List<T2> list2, BiConsumer<T1, T2> consumer) {
+        int size = Math.min(list1.size(), list2.size());
+        for (int i = 0; i < size; i++) {
+            consumer.accept(list1.get(i), list2.get(i));
+        }
     }
 
 
@@ -160,7 +170,7 @@ public class SqlGenServiceImpl implements SqlGenService {
         void render(SqlGenRO ro, SqlGenVO vo, Database database);
     }
 
-    private static class BasicRender implements Render {
+    private class BasicRender implements Render {
 
         /**
          * 设置简单的信息
@@ -183,7 +193,7 @@ public class SqlGenServiceImpl implements SqlGenService {
 
             // 设置HAVING条件和聚合查询列
             vo.setHaving(ro.getHaving());
-            vo.setAggregateSelect(ro.getAggregateSelect());
+            vo.setAggregateSelects(asSet(ro.getAggregateSelects()));
         }
 
         private List<JoinVO> convertJoins(List<JoinRO> joins, Database database) {
@@ -275,7 +285,7 @@ public class SqlGenServiceImpl implements SqlGenService {
         }
     }
 
-    private static class CheckBoxGroupRender implements Render {
+    private class CheckBoxGroupRender implements Render {
 
         /**
          * 设置WHERE、GROUP BY、SELECT、ORDER BY等信息
@@ -310,12 +320,7 @@ public class SqlGenServiceImpl implements SqlGenService {
         private CheckBoxGroupVO getTableColumnsCheckBox(String tableName, String alias, Database database, Set<String> enabled, Set<String> checked) {
             return new CheckBoxGroupVO(alias, database.getTable(tableName).getColumnNames(), enabled, checked);
         }
-
-        private Set<String> asSet(List<String> list) {
-            return CollectionUtils.isEmpty(list) ? Collections.emptySet() : new HashSet<>(list);
-        }
     }
-
 
     private interface SqlGenerator {
         void generate(SqlGenRO ro, StringBuilder sb);
@@ -332,7 +337,7 @@ public class SqlGenServiceImpl implements SqlGenService {
 
             // 获取SELECT列和聚合列
             List<String> selects = ro.getSelects();
-            List<AggregateColumn> aggregates = AggregateUtil.parse(ro.getAggregateSelect());
+            List<AggregateColumn> aggregates = AggregateUtil.parse(ro.getAggregateSelects());
 
             // 处理SELECT列
             if (!CollectionUtils.isEmpty(selects)) {
@@ -359,12 +364,12 @@ public class SqlGenServiceImpl implements SqlGenService {
 
             // 处理聚合列
             if (!aggregates.isEmpty()) {
-                List<String> aggregateColumns = aggregates.stream()
-                        .peek(aggregateColumnAliasSetter::set)
-                        .map(AggregateColumn::toString)
-                        .collect(Collectors.toList());
-                StringUtil.append(sb, "  ", ", ", ",\n", aggregateColumns);
-                sb.deleteCharAt(sb.length() - 2);
+                sb.append("  ");
+                forEach(aggregates, aggregateColumnAliasGenerator.generate(aggregates), (aggregate, alias) -> {
+                    sb.append(aggregate.toString()).append(' ').append(alias).append(", ");
+                });
+                sb.delete(sb.length() - 2, sb.length());
+                sb.append('\n');
             }
 
             StringUtil.append(sb, "FROM ", " ", "\n", ro.getFrom().getTableName(), ro.getFrom().getTableAlias());

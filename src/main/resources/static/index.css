@@ -8,7 +8,22 @@
     display: inline-block;
 }
 
-input[name='aggregateSelect'],input[name='having'] {
+/** 缩小聚合查询列的下拉框，并删除其箭头 */
+.aggregateSelect {
+    height: 16px;
+    width: 18px;
+    font-size: 12px;
+    appearance: none;
+    text-align: center;
+    color: blue;
+    font-weight: bolder;
+}
+
+#header span {
+    color: red;
+}
+
+input[name='having'] {
     width: 500px;
 }
 

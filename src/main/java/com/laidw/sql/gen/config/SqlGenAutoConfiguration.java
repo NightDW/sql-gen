@@ -52,8 +52,8 @@ public class SqlGenAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public AggregateColumnAliasSetter aggregateColumnAliasSetter() {
-        return new SimpleAggregateColumnAliasSetter();
+    public AggregateColumnAliasGenerator aggregateColumnAliasSetter(ColumnAliasGenerator columnAliasGenerator) {
+        return new SimpleAggregateColumnAliasGenerator(columnAliasGenerator);
     }
 
     /**

@@ -3,10 +3,12 @@ package com.laidw.sql.gen.util;
 import com.laidw.sql.gen.constant.AggregateType;
 import com.laidw.sql.gen.entity.AggregateColumn;
 import com.laidw.sql.gen.exception.SqlGenException;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 负责解析聚合列信息
@@ -15,7 +17,33 @@ import java.util.List;
  */
 public class AggregateUtil {
 
-    public static List<AggregateColumn> parse(String aggregateColumn) {
+    /**
+     * 解析聚合查询列；aggregateClauses集合中可能包含空的聚合查询列
+     */
+    public static List<AggregateColumn> parse(List<String> aggregateClauses) {
+        if (CollectionUtils.isEmpty(aggregateClauses)) {
+            return Collections.emptyList();
+        }
+        return aggregateClauses.stream()
+                .filter(aggregateClause -> !aggregateClause.isEmpty())
+                .map(AggregateUtil::parse)
+                .collect(Collectors.toList());
+    }
+
+    private static AggregateColumn parse(String aggregateClause) {
+        int leftIdx = aggregateClause.indexOf('(');
+        int dotIdx = aggregateClause.indexOf('.');
+        String type = aggregateClause.substring(0, leftIdx);
+        String tableAlias = aggregateClause.substring(leftIdx + 1, dotIdx);
+        String columnName = aggregateClause.substring(dotIdx + 1, aggregateClause.length() - 1);
+        return new AggregateColumn(AggregateType.valueOf(type), tableAlias, columnName);
+    }
+
+    /**
+     * 解析用户自己输入的聚合查询列，可能有多个聚合查询列，且可能指定了别名
+     */
+    @Deprecated
+    public static List<AggregateColumn> parseByUserInput(String aggregateColumn) {
         if (aggregateColumn == null || (aggregateColumn = aggregateColumn.trim()).isEmpty()) {
             return Collections.emptyList();
         }
@@ -29,7 +57,7 @@ public class AggregateUtil {
                 throw new SqlGenException("聚合列有误：" + aggCol);
             }
 
-            String alias = split.length == 1 ? null : split[split.length - 1];
+            // String alias = split.length == 1 ? null : split[split.length - 1];
 
             int leftIdx = split[0].indexOf('(');
             int rightIdx = split[0].lastIndexOf(')');
@@ -50,7 +78,7 @@ public class AggregateUtil {
                 throw new SqlGenException("聚合列有误：" + aggCol);
             }
 
-            list.add(new AggregateColumn(type, tableAlias, columnName, alias));
+            list.add(new AggregateColumn(type, tableAlias, columnName));
         }
 
         return list;
